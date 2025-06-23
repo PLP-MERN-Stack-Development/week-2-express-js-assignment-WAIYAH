@@ -1,18 +1,19 @@
-// server.js - Starter Express server for Week 2 assignment
+// server.js - Cleaned and Final for Week 2 Assignment
 
-// Import required modules
 const express = require('express');
-const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
+const logger = require('./middleware/logger');
+const auth = require('./middleware/auth');
+const validateProduct = require('./middleware/validateProduct');
 
-// Initialize Express app
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 
-// Middleware setup
-app.use(bodyParser.json());
+// 🔧 Middleware
+app.use(express.json()); // Parse JSON body
+app.use(logger);         // Custom logger middleware
 
-// Sample in-memory products database
+// 🧠 In-memory products DB
 let products = [
   {
     id: '1',
@@ -40,32 +41,109 @@ let products = [
   }
 ];
 
-// Root route
+// 🏠 Root
 app.get('/', (req, res) => {
-  res.send('Welcome to the Product API! Go to /api/products to see all products.');
+  res.send('Welcome to the Product API! Visit /api/products');
 });
 
-// TODO: Implement the following routes:
-// GET /api/products - Get all products
-// GET /api/products/:id - Get a specific product
-// POST /api/products - Create a new product
-// PUT /api/products/:id - Update a product
-// DELETE /api/products/:id - Delete a product
-
-// Example route implementation for GET /api/products
+// 🔍 GET /api/products - with search, filter, pagination
 app.get('/api/products', (req, res) => {
-  res.json(products);
+  let results = [...products];
+
+  const { search, category, inStock, page = 1, limit = results.length } = req.query;
+
+  if (search) {
+    const keyword = search.toLowerCase();
+    results = results.filter(p =>
+      p.name.toLowerCase().includes(keyword) ||
+      p.description.toLowerCase().includes(keyword)
+    );
+  }
+
+  if (category) {
+    results = results.filter(p => p.category.toLowerCase() === category.toLowerCase());
+  }
+
+  if (inStock) {
+    results = results.filter(p => p.inStock.toString() === inStock);
+  }
+
+  const start = (page - 1) * limit;
+  const paginated = results.slice(start, start + parseInt(limit));
+
+  res.json({ total: results.length, page: parseInt(page), limit: parseInt(limit), data: paginated });
 });
 
-// TODO: Implement custom middleware for:
-// - Request logging
-// - Authentication
-// - Error handling
+// 📦 GET /api/products/:id
+app.get('/api/products/stats', (req, res) => {
+  const countByCategory = {};
+  products.forEach(p => {
+    countByCategory[p.category] = (countByCategory[p.category] || 0) + 1;
+  });
+  res.json({ total: products.length, countByCategory });
+});
 
-// Start the server
+// 📊 GET /api/products/stats
+app.get('/api/products/:id', (req, res) => {
+  const product = products.find(p => p.id === req.params.id);
+  if (!product) return res.status(404).json({ error: 'Product not found' });
+  res.json(product);
+});
+
+// ➕ POST /api/products
+app.post('/api/products', auth, validateProduct, (req, res) => {
+  const { name, description, price, category, inStock } = req.body;
+
+  const newProduct = {
+    id: uuidv4(),
+    name,
+    description,
+    price,
+    category,
+    inStock: inStock ?? true
+  };
+
+  products.push(newProduct);
+  res.status(201).json(newProduct);
+});
+
+// 🛠️ PUT /api/products/:id
+app.put('/api/products/:id', auth, validateProduct, (req, res) => {
+  const { name, description, price, category, inStock } = req.body;
+  const index = products.findIndex(p => p.id === req.params.id);
+
+  if (index === -1) return res.status(404).json({ error: 'Product not found' });
+
+  products[index] = {
+    ...products[index],
+    name,
+    description,
+    price,
+    category,
+    inStock
+  };
+
+  res.json(products[index]);
+});
+
+// ❌ DELETE /api/products/:id
+app.delete('/api/products/:id', auth, (req, res) => {
+  const index = products.findIndex(p => p.id === req.params.id);
+  if (index === -1) return res.status(404).json({ error: 'Product not found' });
+
+  const deleted = products.splice(index, 1);
+  res.json(deleted[0]);
+});
+
+// 🔚 404 Fallback
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
+// 🚀 Start Server
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`✅ Server is running at http://localhost:${PORT}`);
 });
 
-// Export the app for testing purposes
-module.exports = app; 
+// (Optional) Export for testing
+module.exports = app;

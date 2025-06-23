@@ -1,63 +1,113 @@
-[![Open in Visual Studio Code](https://classroom.github.com/assets/open-in-vscode-2e0aaae1b6195c2367325f4f02e2d04e9abb55f0b24a779b69b11b9e10269abc.svg)](https://classroom.github.com/online_ide?assignment_repo_id=19793797&assignment_repo_type=AssignmentRepo)
-# Express.js RESTful API Assignment
+# 🛠️ Week 2 Express.js Assignment – Product API
 
-This assignment focuses on building a RESTful API using Express.js, implementing proper routing, middleware, and error handling.
+## 📌 Overview
 
-## Assignment Overview
+A RESTful API built with Express.js for managing product data.  
+Includes CRUD operations, custom middleware (logger, auth, validation), filtering, pagination, search, and statistics.
 
-You will:
-1. Set up an Express.js server
-2. Create RESTful API routes for a product resource
-3. Implement custom middleware for logging, authentication, and validation
-4. Add comprehensive error handling
-5. Develop advanced features like filtering, pagination, and search
+---
 
-## Getting Started
+## 🚀 Tech Stack
 
-1. Accept the GitHub Classroom assignment invitation
-2. Clone your personal repository that was created by GitHub Classroom
-3. Install dependencies:
-   ```
-   npm install
-   ```
-4. Run the server:
-   ```
-   npm start
-   ```
+- Node.js
+- Express.js
+- UUID
+- Custom Middleware
+- In-memory data store
 
-## Files Included
+---
 
-- `Week2-Assignment.md`: Detailed assignment instructions
-- `server.js`: Starter Express.js server file
-- `.env.example`: Example environment variables file
+## 📂 Project Structure
+.
+├── server.js
+├── .env
+├── routes/
+│ └── products.js (if separated)
+├── middleware/
+│ ├── logger.js
+│ ├── auth.js
+│ └── validateProduct.js
+├── .env.example
+├── README.md
 
-## Requirements
 
-- Node.js (v18 or higher)
-- npm or yarn
-- Postman, Insomnia, or curl for API testing
+---
 
-## API Endpoints
+## 🔐 Authentication
 
-The API will have the following endpoints:
+Protected routes (`POST`, `PUT`, `DELETE`) require this header:
 
-- `GET /api/products`: Get all products
-- `GET /api/products/:id`: Get a specific product
-- `POST /api/products`: Create a new product
-- `PUT /api/products/:id`: Update a product
-- `DELETE /api/products/:id`: Delete a product
 
-## Submission
+---
 
-Your work will be automatically submitted when you push to your GitHub Classroom repository. Make sure to:
+## 🧪 API Endpoints
 
-1. Complete all the required API endpoints
-2. Implement the middleware and error handling
-3. Document your API in the README.md
-4. Include examples of requests and responses
+| Method | Route                   | Description                  |
+|--------|--------------------------|------------------------------|
+| GET    | `/api/products`         | Get all products             |
+| GET    | `/api/products/:id`     | Get product by ID            |
+| POST   | `/api/products`         | Create new product *(auth)*  |
+| PUT    | `/api/products/:id`     | Update product *(auth)*      |
+| DELETE | `/api/products/:id`     | Delete product *(auth)*      |
+| GET    | `/api/products/stats`   | Get total + count by category|
 
-## Resources
+---
 
-- [Express.js Documentation](https://expressjs.com/)
-- [RESTful API Design Best Practices](https://restfulapi.net/)
-- [HTTP Status Codes](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status) 
+## 🔍 Filtering, Search & Pagination
+
+You can use query parameters:
+
+| Param         | Description                                 |
+|---------------|---------------------------------------------|
+| `search`      | Filter by product name/description (text)   |
+| `category`    | Filter by category (e.g., electronics)      |
+| `inStock`     | Filter by stock status (true/false)         |
+| `page`, `limit` | Paginate results (e.g., `page=1&limit=5`) |
+
+### Example:
+
+```http
+GET /api/products?search=laptop&category=electronics&inStock=true&page=1&limit=2
+
+📊 Product Statistics
+h
+Copy
+Edit
+GET /api/products/stats
+
+Sample Response:
+{
+  "total": 3,
+  "countByCategory": {
+    "electronics": 2,
+    "kitchen": 1
+  }
+}
+
+📥 Example Request
+POST /api/products
+Authorization: Bearer mysecrettoken123
+Content-Type: application/json
+
+{
+  "name": "Tablet",
+  "description": "10-inch Android tablet",
+  "price": 400,
+  "category": "electronics",
+  "inStock": true
+}
+
+
+✅ How to Run the Server
+Install dependencies: npm install
+Start the server:npm start
+Visit:http://localhost:5000
+
+🧪 Tools for Testing
+Postman
+
+Insomnia
+
+Thunder Client (VS Code Extension)
+
+curl (command line)
